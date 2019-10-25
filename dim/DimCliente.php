@@ -40,12 +40,7 @@ class DimCliente{
                                                            $cliente->cidade, $cliente->uf, $dataAtual);
                     $sqlInsertDim->execute();
                     $sumario->setQuantidadeInclusoes();
-                } 
-                $sqlComercial->close();
-                $sqlDim->close();
-                $sqlInsertDim->close();
-                $connComercial->close();
-                $connDimensao->close();                                           
+                }                                           
 
             }
         }else{//Dimensão já contem dados
@@ -54,8 +49,8 @@ class DimCliente{
             $resultComercial = $sqlComercial->get_result();
 
             while($linhaComercial = $resultComercial->fetch_assoc()){
-                $sqlDim = $connDimensao->prepare('SELECT SK_cliente, nome, cpf, sexo, idade, rua, bairro, cidade, uf FROM dim_cliente where cpf = ? and data_ini = is null');
-
+                $sqlDim = $connDimensao->prepare('SELECT SK_cliente, nome, cpf, sexo, idade, rua, bairro, cidade, uf FROM dim_cliente where cpf = ? and data_fim  is null');
+                
                 $sqlDim->bind_param('s',$linhaComercial['cpf']);
                 $sqlDim->execute();
 
@@ -93,21 +88,17 @@ class DimCliente{
                         $sqlUpdateDim->bind_param('si',$dataAtual, $linhadim['SK_cliente']); 
                         $sqlUpdateDim->execute();
                         if(!$sqlUpdateDim->error){
-                            $sqlDim = $connComercial->prepare('INSERT INTO dim_cliente (cpf, nome, sexo, idade, rua, bairro, cidade, uf, data_ini) VALUES (?,?,?,?,?,?,?,?,?)');
+                            $sqlInsertDim = $connDimensao->prepare('INSERT INTO dim_cliente (cpf, nome, sexo, idade, rua, bairro, cidade, uf, data_ini) VALUES (?,?,?,?,?,?,?,?,?)');
                             $sqlInsertDim->bind_param('sssisssss',$linhaComercial['cpf'],$linhaComercial['nome'],$linhaComercial['sexo'],$linhaComercial['idade'],
                             $linhaComercial['rua'],$linhaComercial['bairro'],$linhaComercial['cidade'],$linhaComercial['uf'], $dataAtual);
                             $sqlInsertDim->execute();
                             $sumario->setQuantidadeAlteracoes();
         
+                        }else{
+                            throw new Exception("Erro: Erro no Processo de Alteração");
                         }
-                    }else{
-                        throw new Exception("Erro: Erro no Processo de Alteração");
-                        
-
+                    
                     }
-
-
-
                 }
 
             }
